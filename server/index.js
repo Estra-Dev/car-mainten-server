@@ -90,7 +90,7 @@ const app = express();
 app.use(express.json());
 
 app.use("/api/users", userRoutes);
-app.use(ClerkExpressRequireAuth());
+// app.use(ClerkExpressRequireAuth());
 
 app.use("/api/vehicles", ClerkExpressRequireAuth(), vehicleRouter);
 app.use("/api/maintenance", ClerkExpressRequireAuth(), maintenanceRoutes);
