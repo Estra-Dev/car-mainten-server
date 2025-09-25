@@ -5,9 +5,7 @@ import Notification from "../model/Notification.model.js";
 export const getNotification = async (req, res) => {
   try {
     const userId = req.user._id;
-    console.log(userId)
     const notifications = await Notification.find({ user: userId }).sort({ createdAt: -1 });
-    console.log(notifications)
     res.status(200).json(notifications);
   } catch (error) {
     res.status(500).json({ message: "Internal server error" + error.message });
@@ -23,4 +21,19 @@ export const markAsRead = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Internal server error" + error.message });
   } 
+}
+
+export const deleteNotification = async (req, res) => {
+  try {
+    const id = req.params.id
+
+    const noti = await Notification.findById(id)
+    if (!noti) {
+      return res.status(404).json({message: "No Such Notification"})
+    }
+    await Notification.findByIdAndDelete(id)
+    res.status(200).json("Deleted Successfully")
+  } catch (error) {
+    res.status(400).json({message: "Server Error" + error.message})
+  }
 }

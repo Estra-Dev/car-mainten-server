@@ -103,16 +103,16 @@ app.get("/", (req, res) => {
 });
 
 
-// app.get("/test-email", async (req, res) => {
-//   const success = await sendEmail({
-//     to: "dominionib@gmail.com",
-//     subject: "Test Email from Vehicle Management System",
-//     text: "This is a test email sent from the Vehicle Management System.",
-//     html: "<h1>This is a test email sent from the Vehicle Management System.</h1>"
-//   })
+app.get("/test-email", async (req, res) => {
+  const success = await sendEmail({
+    to: "dominionib@gmail.com",
+    subject: "Test Email from Vehicle Management System",
+    text: "This is a test email sent from the Vehicle Management System.",
+    html: "<h1>This is a test email sent from the Vehicle Management System.</h1>"
+  })
 
-//   res.send({success})
-// });
+  res.send({success})
+});
 
 
 const PORT = process.env.PORT || 5000;

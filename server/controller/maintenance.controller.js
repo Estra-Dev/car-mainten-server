@@ -78,19 +78,57 @@ export const allMaintenance = async (req, res) => {
   }
 };
 
-// export const getVehicleMaintenance = async (req, res) => {
-//   try {
-//     const { plateNumber } = req.params;
-//     const vehicle = await Vehicle.findOne({ plateNumber }).populate(
-//       "maintenanceHistory"
-//     );
-//     if (!vehicle) {
-//       return res.status(404).json({ message: "Vehicle not found" });
-//     }
-//     res.status(200).json({ maintenanceHistory: vehicle.maintenanceHistory });
-//   } catch (error) {
-//     res
-//       .status(500)
-//       .json({ message: `Error fetching maintenance ${error.message}` });
-//   }
-// };
+export const deleteMaintenance = async (req, res) => {
+  try {
+    const clerkId = req.auth.userId;
+    const user = await User.findOne({ clerkId });
+    const id = req.params.id
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const maintenance = await Maintenance.findById(id)
+    if (!maintenance) {
+      return res.status(404).json({message: "No Such Maintenace record"})
+    }
+
+    await Vehicle.updateOne({ _id: maintenance.vehicleId }, {$pull: {maintenanceHistory: maintenance._id}});
+    await Maintenance.findByIdAndDelete(id)
+
+    res.status(200).json({message: "Maintenance Deleted"})
+  } catch (error) {
+    res.status(400).json({message: "Server Error" + error.message})
+  }
+}
+
+export const editMaintenance = async (req, res) => {
+  try {
+    const clerkId = req.auth.userId;
+    const user = await User.findOne({ clerkId });
+    const id = req.params.id
+    const update = req.body
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const maintenance = await Maintenance.findById(id);
+    if (!maintenance) {
+      return res.status(404).json({ message: "No Such Maintenace record" });
+    }
+
+    Object.keys(update).forEach((key) => {
+      if (update[key] === "" || update[key] === null || update[key] === undefined) {
+        delete update[key]
+      }
+    })
+
+    const updated = await Maintenance.findByIdAndUpdate(id, {$set: update}, {new: true})
+    console.log("Updated", updated)
+    res.status(200).json(updated)
+    
+  } catch (error) {
+    res.status(400).json({message: "Server Error"})
+  }
+}

@@ -1,5 +1,6 @@
 import Maintenance from "../model/Maintenance.model.js";
 import Notification from "../model/Notification.model.js";
+import User from "../model/User.model.js";
 import Vehicle from "../model/Vehicle.model.js";
 import { sendEmail } from "./email.js";
 
@@ -16,10 +17,10 @@ const createNotification = async ({user, vehicle, type, message, dueDate }) => {
       status: "pending",
     });
 
-    const userEmail = user.email || user; // assuming user object has email field
+    const userEmail = await User.findOne({ _id: user }); // assuming user object has email field
 
     await sendEmail({
-      to: userEmail,
+      to: userEmail.email,
       subject: `Vehicle Management Notification: ${type}`,
       text: message,
       html: `<p>${message}</p> <p>Due Date: ${dueDate.toDateString()}</p>`,
@@ -45,23 +46,35 @@ const createNotification = async ({user, vehicle, type, message, dueDate }) => {
 export const checkUpcomingMaintenance = async () => {
   const today = new Date();
   const threshold = new Date();
-  threshold.setDate(today.getDate() + 60); // 14 days ahead
+  threshold.setDate(today.getDate() + 14); // 14 days ahead
 
   const maintenances = await Maintenance.find({
-    nextServiceDate: { $gte: today, $lte: threshold },
-    notified: false,
+    scheduledDate: { $gte: today, $lte: threshold },
+    // notified: false,
   }).populate('vehicleId').populate('createdBy');
+
+  // console.log("Maintenance", maintenances)
+  
 
 
   for (const maintenance of maintenances) {
-    await createNotification({
-      user: maintenance.createdBy.email,
-      vehicle: maintenance.vehicleId.model,
-      type: "Maintenance Due",
-      message: `Maintenance for ${maintenance.vehicleId.make} ${maintenance.vehicleId.model} is due on ${maintenance.nextServiceDate.toDateString()}.`,
-      dueDate: maintenance.scheduledDate,
-      channel: "email",
-    });
+    console.log("userrr", maintenance.createdBy.email);
+   
+    if (
+      maintenance.scheduledDate >= today &&
+      maintenance.scheduledDate <= threshold
+    ) {
+      await createNotification({
+        user: maintenance.createdBy._id,
+        vehicle: maintenance.vehicleId._id,
+        type: "Maintenance Due",
+        message: `Maintenance for ${maintenance.vehicleId.make} ${
+          maintenance.vehicleId.model
+        } will be due on ${maintenance.nextServiceDate.toDateString()}.`,
+        dueDate: maintenance.scheduledDate,
+        channel: "email",
+      });
+    }
   }
 }
 
@@ -69,7 +82,7 @@ export const checkUpcomingMaintenance = async () => {
 export const checkDocumentExpiries = async () => {
   const today = new Date();
   const threshold = new Date();
-  threshold.setDate(today.getDate() + 60); // 14 days ahead
+  threshold.setDate(today.getDate() + 14); // 14 days ahead
 
   const vehicles = await Vehicle.find().populate({
     path: 'documents',
