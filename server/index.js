@@ -76,7 +76,7 @@ cron.schedule("0 0 * * *", async () => {
   }
 })
 
-cron.schedule("0 0 * * *", async () => {
+cron.schedule("0 */8 * * *", async () => {
   console.log("Running a task every day at midnight to check notifications");
   await checkUpcomingMaintenance();
   await checkDocumentExpiries();
