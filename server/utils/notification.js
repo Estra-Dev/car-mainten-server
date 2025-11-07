@@ -53,7 +53,7 @@ export const checkUpcomingMaintenance = async () => {
     // notified: false,
   }).populate('vehicleId').populate('createdBy');
 
-  // console.log("Maintenance", maintenances)
+  console.log("Maintenance", maintenances)
   
 
 
