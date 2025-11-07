@@ -17,7 +17,7 @@ import { checkDocumentExpiries, checkUpcomingMaintenance } from "./utils/notific
 import Document from "./model/Document.model.js";
 
 // Schedule a cron job to run every day at midnight
-cron.schedule("* * * * *", async () => {
+cron.schedule("0 */8 * * *", async () => {
   console.log("Running a task every day at midnight");
   // Add your scheduled task logic here
 
@@ -48,7 +48,7 @@ cron.schedule("* * * * *", async () => {
   }
 });
 
-cron.schedule("* * * * *", async () => {
+cron.schedule("0 */8 * * *", async () => {
   console.log("Running a task every day at midnight to update document statuses");
   // Add your scheduled task logic here
   try {
@@ -77,7 +77,7 @@ cron.schedule("* * * * *", async () => {
   }
 })
 
-cron.schedule("* * * * *", async () => {
+cron.schedule("0 */8 * * *", async () => {
   console.log("Running a task every day at midnight to check notifications");
   await checkUpcomingMaintenance();
   await checkDocumentExpiries();
