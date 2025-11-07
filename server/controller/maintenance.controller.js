@@ -28,6 +28,7 @@ export const createMaintenance = async (req, res) => {
     } = req.body;
 
     const vehicle = await Vehicle.findOne({ plateNumber: vehiclePlateNo });
+    const scheduled = new Date(scheduledDate)
     if (!vehicle) {
       return res.status(404).json({ message: "Vehicle not found" });
     }
@@ -35,7 +36,7 @@ export const createMaintenance = async (req, res) => {
       vehicleId: vehicle._id,
       vehiclePlateNo,
       priority,
-      scheduledDate,
+      scheduledDate: scheduled,
       serviceType,
       estimatedCost,
       nextServiceDate,

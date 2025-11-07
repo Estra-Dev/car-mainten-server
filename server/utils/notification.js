@@ -4,6 +4,18 @@ import User from "../model/User.model.js";
 import Vehicle from "../model/Vehicle.model.js";
 import { sendEmail } from "./email.js";
 
+
+const getDateRange = (daysAhead = 14) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const threshold = new Date(today);
+  threshold.setDate(today.getDate() + daysAhead);
+  threshold.setHours(23, 59, 59, 999);
+
+  return { today, threshold };
+};
+
 // create notification helper
 const createNotification = async ({user, vehicle, type, message, dueDate }) => {
   try {
@@ -17,10 +29,15 @@ const createNotification = async ({user, vehicle, type, message, dueDate }) => {
       status: "pending",
     });
 
-    const userEmail = await User.findOne({ _id: user }); // assuming user object has email field
+    const userDoc = await User.findById(user); // assuming user object has email field
 
+    if (!userDoc || !userDoc.email) {
+      console.error("❌ User not found or missing email:", user);
+      return;
+    }
+    // console.log("email", userEmail)
     await sendEmail({
-      to: userEmail.email,
+      to: userDoc.email,
       subject: `Vehicle Management Notification: ${type}`,
       text: message,
       html: `<p>${message}</p> <p>Due Date: ${dueDate.toDateString()}</p>`,
@@ -38,62 +55,63 @@ const createNotification = async ({user, vehicle, type, message, dueDate }) => {
 
     return notification;
   } catch (error) {
-    
+    console.error("❌ createNotification error:", error);
   }
 }
 
 // check upcoming maintenance and create notifications
 export const checkUpcomingMaintenance = async () => {
-  const today = new Date();
-  const threshold = new Date();
-  threshold.setDate(today.getDate() + 14); // 14 days ahead
+  const { today, threshold } = getDateRange(14); // 14 days ahead
 
-  const maintenances = await Maintenance.find().populate({
-    path: 'vehicleId',
-    match: { scheduledDate: { $gte: today, $lte: threshold } }
-  }).populate('createdBy');
+  try {
+    const maintenances = await Maintenance.find({
+      scheduledDate: { $gte: today, $lte: threshold },
+    }).populate("vehicleId").populate("createdBy");
 
-  // console.log("Maintenance", today, threshold, maintenances);
+    if (!maintenances.length) {
+      console.log("✅ No upcoming maintenance found.");
+      return;
+    }
   
-
-
-  for (const maintenance of maintenances) {
-    console.log("userrr", maintenance.createdBy.email);
-   
-    if (
-      maintenance.scheduledDate >= today &&
-      maintenance.scheduledDate <= threshold
-    ) {
+    console.log("Maintenance", today, threshold, maintenances);
+    
+    for (const maintenance of maintenances) {
+      console.log("userrr", maintenance.vehiclePlateNo);
+      if (!maintenance.vehicleId || !maintenance.createdBy) continue;
+      
       await createNotification({
         user: maintenance.createdBy._id,
         vehicle: maintenance.vehicleId._id,
         type: "Maintenance Due",
-        message: `Maintenance for ${maintenance.vehicleId.make} ${
-          maintenance.vehicleId.model
+        message: `Maintenance for ${maintenance.vehiclePlateNo} 
         } will be due on ${maintenance.nextServiceDate.toDateString()}.`,
         dueDate: maintenance.scheduledDate,
         channel: "email",
-      });
+      });     
     }
+  } catch (error) {
+    console.error("❌ Error checking maintenance:", error.message);
   }
 }
 
 // check document expiries and create notifications
 export const checkDocumentExpiries = async () => {
-  const today = new Date();
-  const threshold = new Date();
-  threshold.setDate(today.getDate() + 14); // 14 days ahead
+  const { today, threshold } = getDateRange(14); // 14 days ahead
 
-  const vehicles = await Vehicle.find().populate({
-    path: 'documents',
-    match: { expiryDate: { $gte: today, $lte: threshold } }
-  });
-
-  // console.log("Vehicle", vehicles)
-
-  for(const vehicle of vehicles) {
-    for(const doc of vehicle.documents) {
-      if(doc.expiryDate >= today && doc.expiryDate <= threshold) {
+  try {
+    const vehicles = await Vehicle.find().populate({
+      path: 'documents',
+      match: { expiryDate: { $gte: today, $lte: threshold } }
+    });
+  
+    if (!vehicles.length) {
+      console.log("✅ No documents expiring soon.");
+      return;
+    }
+    // console.log("Vehicle", vehicles)
+  
+    for(const vehicle of vehicles) {
+      for(const doc of vehicle.documents) {
         await createNotification({
           user: vehicle.createdBy,
           vehicle: vehicle._id,
@@ -104,5 +122,9 @@ export const checkDocumentExpiries = async () => {
         });
       }
     }
+  } catch (error) {
+    console.error("❌ Error checking document expiries:", error.message);
   }
+
+  
 }

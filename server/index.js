@@ -13,7 +13,7 @@ import { getVehicleStatus } from "./utils/getVehicleStatus.js";
 import { getDocumentStatus } from "./utils/getDocumentStatus.js";
 import Maintenance from "./model/Maintenance.model.js";
 import { checkDocumentExpiries, checkUpcomingMaintenance } from "./utils/notification.js";
-import { sendEmail } from "./utils/email.js";
+// import { sendEmail } from "./utils/email.js";
 import Document from "./model/Document.model.js";
 
 // Schedule a cron job to run every day at midnight
@@ -78,14 +78,9 @@ cron.schedule("* * * * *", async () => {
 })
 
 cron.schedule("* * * * *", async () => {
-  try {
-    console.log("Running a task every day at midnight to check notifications");
-    await checkUpcomingMaintenance();
-    await checkDocumentExpiries();
-    
-  } catch (error) {
-    console.log("Error loading cron job")
-  }
+  console.log("Running a task every day at midnight to check notifications");
+  await checkUpcomingMaintenance();
+  await checkDocumentExpiries();
 });
 
 dotenv.config();

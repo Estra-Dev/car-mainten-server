@@ -1,78 +1,88 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
 
-
+dotenv.config();
 
 export const sendEmail = async ({to, subject, text, html}) => {
 
-  console.log("🚀 sendEmail() called");
-
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+  if(!to){
+    console.log("No recipient")
+    return;
+  }
 
   try {
-    if(!to){
-      console.log("No recipient email provided");
-      return false
-    }
-
-    transporter.verify((error, success) => {
-      if (error) console.error("SMTP connection error:", error);
-      else console.log("SMTP connection success:", success);
+    // create transporter
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      // host: "smtp.gmail.com",
+      // port: 587,
+      // secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      }
     });
-    
 
-    console.log(subject, text, html);
-    console.log("EMAIL_USER:", process.env.EMAIL_USER);
-    console.log(
-      "EMAIL_PASS:",
-      process.env.EMAIL_PASS ? "✔️ loaded" : "❌ missing"
-    );
-    // send mail with defined transport object
+    await transporter.verify();
+    console.log("SMPT connection verified")
+
     const info = await transporter.sendMail({
-      from: `"Vehicle Management System" <${process.env.EMAIL_USER}>`, // sender address
+      from: `Vehicle Management System <${process.env.EMAIL_USER}>`,
       to,
       subject,
       text,
-      html,
-    });
+      html
+    })
 
-    console.log("Email sent: %s", info.messageId);
-    return true
-  } catch (error) {
-    console.log("Error sending email: ", error);
-    return false
+    console.log("Email sent successfully:", info.messageId);
+    return info;
+  }catch (error) {
+    console.error("Error sending email:", error.message);
   }
-
-
-  // async function testEmail() {
-  //   let transporter = nodemailer.createTransport({
-  //     service: "gmail",
-  //     auth: {
-  //       user: process.env.EMAIL_USER,
-  //       pass: process.env.EMAIL_PASS,
-  //     },
-  //   });
-
-  //   try {
-  //     let info = await transporter.sendMail({
-  //       from: process.env.EMAIL_USER,
-  //       to: "dominionib@gmail.com",
-  //       subject: "SMTP Test",
-  //       text: "Hello from Nodemailer",
-  //     });
-  //     console.log("✅ Test email sent:", info.messageId);
-  //   } catch (error) {
-  //     console.error("❌ Error:", error);
-  //   }
-  // }
-
-  // testEmail();
 }
+
+console.log(process.env.TEST_EMAIL_RECIPIENT)
+
+// await sendEmail({
+//   to: "dominikolyson@gmail.com",
+//   subject: "Test Email from Vehicle Management System",
+//   text: "This is a test email to verify the email sending functionality.",
+//   html: "<h1>This is a test email to verify the email sending functionality.</h1>"
+// })
+
+
+// create transporter
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   host: "smtp.gmail.com",
+//   port: 587,
+//   secure: true,
+//   auth: {
+//     user: process.env.EMAIL_USER,
+//     pass: process.env.EMAIL_PASS,
+//   }
+
+// })
+
+// // verify connection and send test email
+// async function testMail() {
+//   try {
+//     console.log("Verifying SMTP connection...")
+//     await transporter.verify();
+//     console.log("SMTP connection verified successfully.");
+
+//     const info = await transporter.sendMail({
+//       from: `Vehicle Management System <${process.env.EMAIL_USER}>`,
+//       to: process.env.TEST_EMAIL_RECIPIENT,
+//       subject: "Test Email - Vehicle Management System",
+//       text: "This is a test email sent from the Vehicle Management System to verify SMTP configuration.",
+//       html: "<h1>This is a test email sent from the Vehicle Management System to verify SMTP configuration.</h1>"
+//     });
+
+//     console.log("Test email sent successfully:", info.response);
+//   } catch (error) {
+//     console.log("Email test failed", error.message);
+//   }
+// };
+
+// testMail();
