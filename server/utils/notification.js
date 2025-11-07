@@ -48,12 +48,12 @@ export const checkUpcomingMaintenance = async () => {
   const threshold = new Date();
   threshold.setDate(today.getDate() + 14); // 14 days ahead
 
-  const maintenances = await Maintenance.find({
-    scheduledDate: { $gte: today, $lte: threshold },
-    // notified: false,
-  }).populate('vehicleId').populate('createdBy');
+  const maintenances = await Maintenance.find().populate({
+    path: 'vehicleId',
+    match: { scheduledDate: { $gte: today, $lte: threshold } }
+  }).populate('createdBy');
 
-  console.log("Maintenance", maintenances)
+  // console.log("Maintenance", today, threshold, maintenances);
   
 
 
@@ -87,8 +87,9 @@ export const checkDocumentExpiries = async () => {
   const vehicles = await Vehicle.find().populate({
     path: 'documents',
     match: { expiryDate: { $gte: today, $lte: threshold } }
-  }
-  );
+  });
+
+  // console.log("Vehicle", vehicles)
 
   for(const vehicle of vehicles) {
     for(const doc of vehicle.documents) {
