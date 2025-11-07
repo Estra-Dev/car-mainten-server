@@ -16,7 +16,7 @@ import { checkDocumentExpiries, checkUpcomingMaintenance } from "./utils/notific
 import { sendEmail } from "./utils/email.js";
 
 // Schedule a cron job to run every day at midnight
-cron.schedule("0 0 * * *", async () => {
+cron.schedule("* * * * *", async () => {
   console.log("Running a task every day at midnight");
   // Add your scheduled task logic here
 
@@ -47,7 +47,7 @@ cron.schedule("0 0 * * *", async () => {
   }
 });
 
-cron.schedule("0 0 * * *", async () => {
+cron.schedule("* * * * *", async () => {
   console.log("Running a task every day at midnight to update document statuses");
   // Add your scheduled task logic here
   try {
@@ -76,10 +76,15 @@ cron.schedule("0 0 * * *", async () => {
   }
 })
 
-cron.schedule("0 */8 * * *", async () => {
-  console.log("Running a task every day at midnight to check notifications");
-  await checkUpcomingMaintenance();
-  await checkDocumentExpiries();
+cron.schedule("* * * * *", async () => {
+  try {
+    console.log("Running a task every day at midnight to check notifications");
+    await checkUpcomingMaintenance();
+    await checkDocumentExpiries();
+    
+  } catch (error) {
+    console.log("Error loading cron job")
+  }
 });
 
 dotenv.config();
