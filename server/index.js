@@ -14,6 +14,7 @@ import { getDocumentStatus } from "./utils/getDocumentStatus.js";
 import Maintenance from "./model/Maintenance.model.js";
 import { checkDocumentExpiries, checkUpcomingMaintenance } from "./utils/notification.js";
 import { sendEmail } from "./utils/email.js";
+import Document from "./model/Document.model.js";
 
 // Schedule a cron job to run every day at midnight
 cron.schedule("* * * * *", async () => {
@@ -55,7 +56,7 @@ cron.schedule("* * * * *", async () => {
     const documents = await Document.find();
 
     for (const document of documents) {
-      const vehicle = await Vehicle.findById(document.vehicle);
+      const vehicle = await Vehicle.findOne({plateNumber: document.vehicle});
       if (!vehicle.documents.length) {
         document.status = "active"; // No documents, set to active
         await document.save();
